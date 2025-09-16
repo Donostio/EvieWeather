@@ -29,7 +29,7 @@
         <div id="weather-display" class="flex flex-col items-center justify-center">
             <p>Checking weather for journey to LMS...</p>
            <br>
-            <p>   🧥      ☂️      ? </p>
+            <p>   🧥       ☂️       ? </p>
         </div>
     </div>
 
@@ -39,11 +39,12 @@
 
             // IMPORTANT: This URL must be from the most recent deployment of your Apps Script
             const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwaHS4rYACz-c53kByTzYmjUxsaKK2pAk7MXX6Tqvu4mtxqjRbbVPCfoEZuMzOS7k1EnA/exec';
-            const LAT = 51.42;
-            const LON = -0.22;
-            const apiUrl = `${GAS_WEB_APP_URL}?lat=${LAT}&lon=${LON}`;
+            
+            // This is the correct URL to fetch from, without any query parameters
+            const apiUrl = GAS_WEB_APP_URL;
 
-            if (GAS_WEB_APP_URL === 'https://script.google.com/macros/s/AKfycbwaHS4rYACz-c53kByTzYmjUxsaKK2pAk7MXX6Tqvu4mtxqjRbbVPCfoEZuMzOS7k1EnA/exec') {
+            // Check if the URL is the default placeholder before fetching
+            if (GAS_WEB_APP_URL === 'YOUR_NEWLY_DEPLOYED_APPS_SCRIPT_URL_HERE') {
                 displayElement.innerHTML = `
                     <p class="text-red-500">Error: Google Apps Script URL not set.</p>
                     <p class="text-sm mt-2">Please edit this file and replace 'YOUR_NEWLY_DEPLOYED_APPS_SCRIPT_URL_HERE' with your deployed web app URL.</p>
@@ -55,15 +56,11 @@
             const wmoWeatherCodeToEmoji = (code, isDay) => {
                 const isNight = isDay === 0;
                 const emojis = {
-                    0: isNight ? "🌙" : "☀️",
-                    1: isNight ? "☁️🌙" : "🌤️",
-                    2: isNight ? "☁️🌙" : "⛅️",
-                    3: "☁️",
-                    45: "🌫️", 48: "🌫️",
-                    51: "🌦️", 53: "🌧️", 55: "🌧️", 56: "🥶🌧️", 57: "🥶🌧️",
-                    61: "🌧️", 63: "🌧️", 65: "🌧️", 66: "🥶🌧️", 67: "🥶🌧️",
-                    71: "🌨️", 73: "🌨️", 75: "🌨️", 77: "🌨️",
-                    80: "🌧️", 81: "🌧️", 82: "🌧️", 85: "🌨️", 86: "🌨️",
+                    0: isNight ? "🌙" : "☀️", 1: isNight ? "☁️🌙" : "🌤️", 2: isNight ? "☁️🌙" : "⛅️",
+                    3: "☁️", 45: "🌫️", 48: "🌫️", 51: "🌦️", 53: "🌧️", 55: "🌧️", 
+                    56: "🥶🌧️", 57: "🥶🌧️", 61: "🌧️", 63: "🌧️", 65: "🌧️", 
+                    66: "🥶🌧️", 67: "🥶🌧️", 71: "🌨️", 73: "🌨️", 75: "🌨️", 
+                    77: "🌨️", 80: "🌧️", 81: "🌧️", 82: "🌧️", 85: "🌨️", 86: "🌨️",
                     95: "⛈️", 96: "⛈️", 99: "⛈️"
                 };
                 return emojis[code] || "❓";
@@ -73,16 +70,14 @@
             const getWeatherDescription = (code) => {
                 const descriptions = {
                     0: "Clear sky", 1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
-                    45: "Fog", 48: "Depositing rime fog",
-                    51: "Light drizzle", 53: "Moderate drizzle", 55: "Dense drizzle",
-                    56: "Light freezing drizzle", 57: "Dense freezing drizzle",
-                    61: "Light rain", 63: "Moderate rain", 65: "Heavy rain",
-                    66: "Light freezing rain", 67: "Heavy freezing rain",
-                    71: "Light snow fall", 73: "Moderate snow fall", 75: "Heavy snow fall",
-                    77: "Snow grains",
-                    80: "Light rain showers", 81: "Moderate rain showers", 82: "Violent rain showers",
-                    85: "Light snow", 86: "Heavy snow",
-                    95: "Thunderstorm", 96: "Thunderstorm with hail", 99: "Thunderstorm with heavy hail"
+                    45: "Fog", 48: "Depositing rime fog", 51: "Light drizzle", 53: "Moderate drizzle",
+                    55: "Dense drizzle", 56: "Light freezing drizzle", 57: "Dense freezing drizzle",
+                    61: "Light rain", 63: "Moderate rain", 65: "Heavy rain", 66: "Light freezing rain",
+                    67: "Heavy freezing rain", 71: "Light snow fall", 73: "Moderate snow fall",
+                    75: "Heavy snow fall", 77: "Snow grains", 80: "Light rain showers",
+                    81: "Moderate rain showers", 82: "Violent rain showers", 85: "Light snow",
+                    86: "Heavy snow", 95: "Thunderstorm", 96: "Thunderstorm with hail",
+                    99: "Thunderstorm with heavy hail"
                 };
                 return descriptions[code] || "Unknown weather";
             };
@@ -114,7 +109,7 @@
                             <p class="text-[10rem] lg:text-[15rem]">${dailyWeatherEmoji}</p>
                             <div class="flex flex-col items-center justify-center mt-[-2rem]">
                                 <p class="text-xl capitalize">${dailyDescription}</p>
-                                <p class="text-md mt-2">High ${dailyMaxTemp}°C  -    Low ${dailyMinTemp}°C</p>
+                                <p class="text-md mt-2">High ${dailyMaxTemp}°C  -  Low ${dailyMinTemp}°C</p>
                                 <p class="text-xl mt-2">🌧️ ${maxRainProbability}%  chance of rain within 2 hrs </p>
                             </div>
                         `;
