@@ -100,32 +100,28 @@
             fetch(fullUrl) 
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error(`Network response was not ok: ${response.statusText}`);
+                        // This error indicates the Open-Meteo API had an issue.
+                        throw new Error(`Open-Meteo API response was not ok: ${response.statusText}`);
                     }
                     return response.json();
                 })
                 .then(data => {
                     if (data && data.daily && data.hourly) {
-                        // The API returns yesterday's data at index 0 and today's at index 1.
+                        // All existing data processing logic remains the same
                         const dailyWeatherCode = data.daily.weather_code[1];
                         const dailyMaxTemp = data.daily.temperature_2m_max[1].toFixed(0);
                         const dailyMinTemp = data.daily.temperature_2m_min[1].toFixed(0);
                         const dailyDescription = getWeatherDescription(dailyWeatherCode);
-
-                        // Yesterday's high temperature from the daily array at index 0
                         const yesterdayMaxTemp = data.daily.temperature_2m_max[0].toFixed(0);
 
-                        // Calculate the temperature difference
                         const tempDiff = dailyMaxTemp - yesterdayMaxTemp;
                         const diffText = tempDiff > 0 ? `${Math.abs(tempDiff)}°C warmer than yesterday` :
                                                  tempDiff < 0 ? `${Math.abs(tempDiff)}°C cooler than yesterday` :
                                                  `Similar temperature as yesterday`;
 
-                        // Use current data for day/night
                         const isDay = data.current.is_day;
                         const dailyWeatherEmoji = wmoWeatherCodeToEmoji(dailyWeatherCode, isDay);
                         
-                        // Extract hourly data for the 2-hour rain forecast (0 and 1 are the next two hours)
                         const rainProbabilities = data.hourly.precipitation_probability.slice(0, 2);
                         const maxRainProbability = Math.max(...rainProbabilities);
                         
@@ -141,7 +137,6 @@
                             </div>
                         `;
                         
-                        // Send the 'page-ready' signal to the parent window (if embedded)
                         window.parent.postMessage({ type: 'page-ready' }, '*');
                         
                     } else {
@@ -152,7 +147,7 @@
                     console.error('Fetch error:', error);
                     displayElement.innerHTML = `
                         <p class="text-red-500">Failed to load weather data.</p>
-                        <p class="text-sm mt-2">Check your internet connection or the Open-Meteo API status.</p>
+                        <p class="text-sm mt-2">Please check your network connection or the Open-Meteo API status.</p>
                     `;
                 });
         });
