@@ -18,18 +18,14 @@
             min-height: 100vh;
             text-align: center;
         }
-        /* Add the white-space property to handle newlines */
-        #weather-display {
-            white-space: pre-line;
-        }
     </style>
 </head>
 <body>
     <div>
         <div id="weather-display" class="flex flex-col items-center justify-center">
             <p>Checking weather for journey to LMS...</p>
-           <br>
-            <p>   🧥       ☂️       ? </p>
+            <br>
+            <p> 🚶🏼‍♀️‍➡️ 🚃 🚶🏼‍♀️‍➡️      🧥      ☂️      ? </p>
         </div>
     </div>
 
@@ -38,12 +34,11 @@
             const displayElement = document.getElementById('weather-display');
 
             // IMPORTANT: This URL must be from the most recent deployment of your Apps Script
-            const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwaHS4rYACz-c53kByTzYmjUxsaKK2pAk7MXX6Tqvu4mtxqjRbbVPCfoEZuMzOS7k1EnA/exec';
-            
-            // This is the correct URL to fetch from, without any query parameters
-            const apiUrl = GAS_WEB_APP_URL;
+            const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyqNZJhOOMDtFwgB5EWaoUuewSijG_DvWB3a015qSshCUsTDAhVaMSlv3jGtc6kKeGMoQ/exec';
+            const LAT = 51.42;
+            const LON = -0.22;
+            const apiUrl = `${GAS_WEB_APP_URL}`;
 
-            // Check if the URL is the default placeholder before fetching
             if (GAS_WEB_APP_URL === 'YOUR_NEWLY_DEPLOYED_APPS_SCRIPT_URL_HERE') {
                 displayElement.innerHTML = `
                     <p class="text-red-500">Error: Google Apps Script URL not set.</p>
@@ -56,11 +51,15 @@
             const wmoWeatherCodeToEmoji = (code, isDay) => {
                 const isNight = isDay === 0;
                 const emojis = {
-                    0: isNight ? "🌙" : "☀️", 1: isNight ? "☁️🌙" : "🌤️", 2: isNight ? "☁️🌙" : "⛅️",
-                    3: "☁️", 45: "🌫️", 48: "🌫️", 51: "🌦️", 53: "🌧️", 55: "🌧️", 
-                    56: "🥶🌧️", 57: "🥶🌧️", 61: "🌧️", 63: "🌧️", 65: "🌧️", 
-                    66: "🥶🌧️", 67: "🥶🌧️", 71: "🌨️", 73: "🌨️", 75: "🌨️", 
-                    77: "🌨️", 80: "🌧️", 81: "🌧️", 82: "🌧️", 85: "🌨️", 86: "🌨️",
+                    0: isNight ? "🌙" : "☀️",
+                    1: isNight ? "☁️🌙" : "🌤️",
+                    2: isNight ? "☁️🌙" : "⛅️",
+                    3: "☁️",
+                    45: "🌫️", 48: "🌫️",
+                    51: "🌦️", 53: "🌧️", 55: "🌧️", 56: "🥶🌧️", 57: "🥶🌧️",
+                    61: "🌧️", 63: "🌧️", 65: "🌧️", 66: "🥶🌧️", 67: "🥶🌧️",
+                    71: "🌨️", 73: "🌨️", 75: "🌨️", 77: "🌨️",
+                    80: "🌧️", 81: "🌧️", 82: "🌧️", 85: "🌨️", 86: "🌨️",
                     95: "⛈️", 96: "⛈️", 99: "⛈️"
                 };
                 return emojis[code] || "❓";
@@ -70,14 +69,16 @@
             const getWeatherDescription = (code) => {
                 const descriptions = {
                     0: "Clear sky", 1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
-                    45: "Fog", 48: "Depositing rime fog", 51: "Light drizzle", 53: "Moderate drizzle",
-                    55: "Dense drizzle", 56: "Light freezing drizzle", 57: "Dense freezing drizzle",
-                    61: "Light rain", 63: "Moderate rain", 65: "Heavy rain", 66: "Light freezing rain",
-                    67: "Heavy freezing rain", 71: "Light snow fall", 73: "Moderate snow fall",
-                    75: "Heavy snow fall", 77: "Snow grains", 80: "Light rain showers",
-                    81: "Moderate rain showers", 82: "Violent rain showers", 85: "Light snow",
-                    86: "Heavy snow", 95: "Thunderstorm", 96: "Thunderstorm with hail",
-                    99: "Thunderstorm with heavy hail"
+                    45: "Fog", 48: "Depositing rime fog",
+                    51: "Light drizzle", 53: "Moderate drizzle", 55: "Dense drizzle",
+                    56: "Light freezing drizzle", 57: "Dense freezing drizzle",
+                    61: "Light rain", 63: "Moderate rain", 65: "Heavy rain",
+                    66: "Light freezing rain", 67: "Heavy freezing rain",
+                    71: "Light snow fall", 73: "Moderate snow fall", 75: "Heavy snow fall",
+                    77: "Snow grains",
+                    80: "Light rain showers", 81: "Moderate rain showers", 82: "Violent rain showers",
+                    85: "Light snow", 86: "Heavy snow",
+                    95: "Thunderstorm", 96: "Thunderstorm with hail", 99: "Thunderstorm with heavy hail"
                 };
                 return descriptions[code] || "Unknown weather";
             };
@@ -92,31 +93,44 @@
                 .then(data => {
                     if (data && data.daily && data.hourly) {
                         // Extract daily data for overall forecast
-                        const dailyWeatherCode = data.daily.weather_code[0];
-                        const dailyMaxTemp = data.daily.temperature_2m_max[0].toFixed(0);
-                        const dailyMinTemp = data.daily.temperature_2m_min[0].toFixed(0);
+                        // The API now returns two days, so today is at index 1 and yesterday is at index 0.
+                        const dailyWeatherCode = data.daily.weather_code[1];
+                        const dailyMaxTemp = data.daily.temperature_2m_max[1].toFixed(0);
+                        const dailyMinTemp = data.daily.temperature_2m_min[1].toFixed(0);
                         const dailyDescription = getWeatherDescription(dailyWeatherCode);
+
+                        // Extract yesterday's high temperature from the daily array at index 0
+                        const yesterdayMaxTemp = data.daily.temperature_2m_max[0].toFixed(0);
+
+                        // Calculate the temperature difference
+                        const tempDiff = dailyMaxTemp - yesterdayMaxTemp;
+                        const diffText = tempDiff > 0 ? `${Math.abs(tempDiff)}°C warmer than yesterday` :
+                                                 tempDiff < 0 ? `${Math.abs(tempDiff)}°C cooler than yesterday` :
+                                                 `Similar temperature as yesterday`;
 
                         // Use current data for day/night
                         const isDay = data.current.is_day;
                         const dailyWeatherEmoji = wmoWeatherCodeToEmoji(dailyWeatherCode, isDay);
-                        
+                          
                         // Extract hourly data for the 2-hour rain forecast
                         const rainProbabilities = data.hourly.precipitation_probability.slice(0, 2);
                         const maxRainProbability = Math.max(...rainProbabilities);
-
+                          
                         displayElement.innerHTML = `
-                            <p class="text-[10rem] lg:text-[15rem]">${dailyWeatherEmoji}</p>
-                            <div class="flex flex-col items-center justify-center mt-[-2rem]">
-                                <p class="text-xl capitalize">${dailyDescription}</p>
-                                <p class="text-md mt-2">High ${dailyMaxTemp}°C  -  Low ${dailyMinTemp}°C</p>
-                                <p class="text-xl mt-2">🌧️ ${maxRainProbability}%  chance of rain within 2 hrs </p>
+                            <p class="text-[10rem] lg:text-[15rem] leading-none mb-[-2rem]">${dailyWeatherEmoji}</p>
+                            <div class="flex flex-col items-center justify-center">
+                                <br><br>
+                                <p class="text-3xl capitalize mt-2">${dailyDescription}</p>
+                                <p class="text-xl mt-2">High ${dailyMaxTemp}°C - Low ${dailyMinTemp}°C</p>
+                                <p class="text-xl">${diffText}</p>
+                                <br>
+                                <p class="text-xl mt-2">🌧️ ${maxRainProbability}% chance of rain within 2 hrs </p>
                             </div>
                         `;
-                        
+                          
                         // Send the 'page-ready' signal to the parent window
                         window.parent.postMessage({ type: 'page-ready' }, '*');
-                        
+                          
                     } else {
                         displayElement.innerHTML = '<p class="text-red-500">No weather data found. Data may be incomplete.</p>';
                     }
