@@ -25,7 +25,7 @@
         <div id="weather-display" class="flex flex-col items-center justify-center">
             <p>Checking weather for journey to LMS...</p>
             <br>
-            <p> 🚶🏼‍♀️‍➡️ 🚃 🚶🏼‍♀️‍➡️      🧥     ☂️     ? </p>
+            <p> 🚶🏼‍♀️‍➡️ 🚃 🚶🏼‍♀️‍➡️     🧥     ☂️     ? </p>
         </div>
     </div>
 
@@ -116,8 +116,8 @@
 
                         const tempDiff = dailyMaxTemp - yesterdayMaxTemp;
                         const diffText = tempDiff > 0 ? `${Math.abs(tempDiff)}°C warmer than yesterday` :
-                                                 tempDiff < 0 ? `${Math.abs(tempDiff)}°C cooler than yesterday` :
-                                                 `Similar temperature as yesterday`;
+                                                     tempDiff < 0 ? `${Math.abs(tempDiff)}°C cooler than yesterday` :
+                                                     `Similar temperature as yesterday`;
 
                         const isDay = data.current.is_day;
                         const dailyWeatherEmoji = wmoWeatherCodeToEmoji(dailyWeatherCode, isDay);
@@ -126,7 +126,9 @@
                         const maxRainProbability = Math.max(...rainProbabilities);
                         
                         displayElement.innerHTML = `
-                            <p class="text-[10rem] lg:text-[15rem] leading-none mb-[-2rem]">${dailyWeatherEmoji}</p>
+                            <p class="text-[10rem] lg:text-[15rem] leading-none">
+                                ${dailyWeatherEmoji}
+                            </p>
                             <div class="flex flex-col items-center justify-center">
                                 <br><br>
                                 <p class="text-3xl capitalize mt-2">${dailyDescription}</p>
