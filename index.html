@@ -22,10 +22,9 @@
 </head>
 <body>
     <div>
-        <div id="weather-display" class="min-h-screen grid place-items-center text-center">
+        <div id="weather-display" class="flex flex-col items-center justify-center text-center space-y-2 min-h-screen">
             <p>Checking weather for journey to LMS...</p>
-            <br>
-            <p> 🚶🏼‍♀️‍➡️ 🚃 🚶🏼‍♀️‍➡️     🧥     ☂️     ? </p>
+            <p> 🚶🏼‍♀️‍➡️ 🚃 🚶🏼‍♀️‍➡️ 🧥 ☂️ ? </p>
         </div>
     </div>
 
@@ -33,9 +32,9 @@
         document.addEventListener('DOMContentLoaded', () => {
             const displayElement = document.getElementById('weather-display');
 
-            // --- API Configuration (Defined directly in client-side JS) ---
-            const LAT = 51.45; // Latitude for a point in SW London
-            const LON = -0.15; // Longitude for a point in SW London
+            // --- API Configuration ---
+            const LAT = 51.45;
+            const LON = -0.15;
             const FORECAST_HOURS = 2;
             const FORECAST_DAYS = 1;
             const API_BASE_URL = "https://api.open-meteo.com/v1/forecast";
@@ -44,23 +43,20 @@
                 latitude: LAT,
                 longitude: LON,
                 current: "temperature_2m,weather_code,is_day",
-                hourly: "precipitation_probability", 
-                daily: "weather_code,temperature_2m_max,temperature_2m_min", 
+                hourly: "precipitation_probability",
+                daily: "weather_code,temperature_2m_max,temperature_2m_min",
                 forecast_days: FORECAST_DAYS,
-                forecast_hours: FORECAST_HOURS, 
+                forecast_hours: FORECAST_HOURS,
                 timezone: "GMT",
-                past_days: 1, // Request yesterday's data for comparison
+                past_days: 1,
             };
 
-            // Build the query string dynamically
             const queryString = Object.keys(params)
                 .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key]))
                 .join('&');
 
             const fullUrl = `${API_BASE_URL}?${queryString}`;
-            // -----------------------------------------------------------------
 
-            // Helper function to get a weather emoji from a WMO code
             const wmoWeatherCodeToEmoji = (code, isDay) => {
                 const isNight = isDay === 0;
                 const emojis = {
@@ -78,7 +74,6 @@
                 return emojis[code] || "❓";
             };
 
-            // Helper function to get weather description from WMO code
             const getWeatherDescription = (code) => {
                 const descriptions = {
                     0: "Clear sky", 1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
@@ -96,18 +91,15 @@
                 return descriptions[code] || "Unknown weather";
             };
 
-            // --- Direct Fetch Call to Open-Meteo ---
-            fetch(fullUrl) 
+            fetch(fullUrl)
                 .then(response => {
                     if (!response.ok) {
-                        // This error indicates the Open-Meteo API had an issue.
                         throw new Error(`Open-Meteo API response was not ok: ${response.statusText}`);
                     }
                     return response.json();
                 })
                 .then(data => {
                     if (data && data.daily && data.hourly) {
-                        // All existing data processing logic remains the same
                         const dailyWeatherCode = data.daily.weather_code[1];
                         const dailyMaxTemp = data.daily.temperature_2m_max[1].toFixed(0);
                         const dailyMinTemp = data.daily.temperature_2m_min[1].toFixed(0);
@@ -115,32 +107,28 @@
                         const yesterdayMaxTemp = data.daily.temperature_2m_max[0].toFixed(0);
 
                         const tempDiff = dailyMaxTemp - yesterdayMaxTemp;
-                        const diffText = tempDiff > 0 ? `${Math.abs(tempDiff)}°C warmer than yesterday` :
-                                                     tempDiff < 0 ? `${Math.abs(tempDiff)}°C cooler than yesterday` :
-                                                     `Similar temperature as yesterday`;
+                        const diffText =
+                            tempDiff > 0 ? `${Math.abs(tempDiff)}°C warmer than yesterday` :
+                            tempDiff < 0 ? `${Math.abs(tempDiff)}°C cooler than yesterday` :
+                            `Similar temperature as yesterday`;
 
                         const isDay = data.current.is_day;
                         const dailyWeatherEmoji = wmoWeatherCodeToEmoji(dailyWeatherCode, isDay);
-                        
+
                         const rainProbabilities = data.hourly.precipitation_probability.slice(0, 2);
                         const maxRainProbability = Math.max(...rainProbabilities);
-                        
+
                         displayElement.innerHTML = `
-                            <p class="text-[9rem] lg:text-[13.5rem] leading-none">
-                                ${dailyWeatherEmoji}
-                            </p>
-                            <div class="flex flex-col items-center justify-center">
-                                <br><br>
+                            <div class="flex flex-col items-center justify-center text-center">
+                                <p class="text-[9rem] lg:text-[13.5rem] leading-none">${dailyWeatherEmoji}</p>
                                 <p class="text-3xl capitalize mt-2">${dailyDescription}</p>
-                                <p class="text-xl mt-2">High ${dailyMaxTemp}°C - Low ${dailyMinTemp}°C</p>
-                                <p class="text-xl">${diffText}</p>
-                                <br>
-                                <p class="text-xl mt-2">🌧️ ${maxRainProbability}% chance within 2 hrs </p>
+                                <p class="text-xl mt-1">High ${dailyMaxTemp}°C - Low ${dailyMinTemp}°C</p>
+                                <p class="text-xl mt-1">${diffText}</p>
+                                <p class="text-xl mt-2">🌧️ ${maxRainProbability}% chance within 2 hrs</p>
                             </div>
                         `;
-                        
+
                         window.parent.postMessage({ type: 'page-ready' }, '*');
-                        
                     } else {
                         displayElement.innerHTML = '<p class="text-red-500">No weather data found. Data may be incomplete.</p>';
                     }
